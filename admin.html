@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 实时数据演示系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* 登录界面 */
+        #login-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-box h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .login-box p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-box button:hover {
+            background: var(--primary-dark);
+        }
+
+        .login-error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* 主界面 */
+        #admin-panel {
+            display: none;
+        }
+
+        .admin-header {
+            background: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .admin-header h1 {
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg);
+        }
+
+        .admin-content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 标签页 */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: white;
+            padding: 4px;
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* 数据编辑区 */
+        .slide-editor {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .slide-editor h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .kpi-editor {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-edit-card {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .kpi-edit-card h4 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .chart-data-editor {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .data-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .data-row input {
+            flex: 1;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        /* 表格编辑器 */
+        .table-editor {
+            overflow-x: auto;
+        }
+
+        .table-editor table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table-editor th {
+            background: var(--bg);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .table-editor td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-editor input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* 预览区 */
+        .preview-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .preview-section h3 {
+            margin-bottom: 16px;
+        }
+
+        .preview-iframe {
+            width: 100%;
+            height: 500px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+        }
+
+        /* 提示消息 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateY(100px);
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .toast-success { background: var(--success); }
+        .toast-error { background: var(--danger); }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .admin-content { padding: 16px; }
+            .kpi-editor { grid-template-columns: 1fr; }
+            .chart-data-editor { grid-template-columns: 1fr; }
+            .header-actions { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>🔐 管理后台</h2>
+            <p>请输入密码进入数据编辑面板</p>
+            <input type="password" id="password" placeholder="请输入密码" onkeypress="if(event.key==='Enter')login()">
+            <button onclick="login()">进入后台</button>
+            <div class="login-error" id="login-error">密码错误，请重试</div>
+            <p style="margin-top: 16px; font-size: 12px; color: #94a3b8;">
+                默认密码: admin123<br>
+                建议部署后立即修改
+            </p>
+        </div>
+    </div>
+
+    <!-- 管理面板 -->
+    <div id="admin-panel">
+        <div class="admin-header">
+            <h1>⚙️ 实时数据管理后台</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="previewDashboard()">👁️ 预览看板</button>
+                <button class="btn btn-success" onclick="saveAllData()">💾 保存并推送</button>
+                <button class="btn btn-secondary" onclick="resetData()">🔄 重置默认</button>
+                <button class="btn btn-danger" onclick="logout()">🚪 退出</button>
+            </div>
+        </div>
+
+        <div class="admin-content">
+            <!-- 标签页 -->
+            <div class="tabs" id="slide-tabs">
+                <!-- 动态生成 -->
+            </div>
+
+            <!-- 编辑区域 -->
+            <div id="editor-container">
+                <!-- 动态生成 -->
+            </div>
+
+            <!-- 实时预览 -->
+            <div class="preview-section">
+                <h3>📱 实时预览（保存后自动更新）</h3>
+                <iframe class="preview-iframe" id="preview-frame" src="index.html"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const ADMIN_PASSWORD = 'admin123'; // 默认密码，建议修改
+        let currentData = null;
+        let currentSlideIndex = 0;
+
+        // 登录
+        function login() {
+            const pwd = document.getElementById('password').value;
+            if (pwd === ADMIN_PASSWORD) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                loadData();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        // 退出
+        function logout() {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('password').value = '';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        // 加载数据
+        function loadData() {
+            const stored = localStorage.getItem('dashboard_data');
+            if (stored) {
+                currentData = JSON.parse(stored);
+            } else {
+                // 默认数据
+                currentData = getDefaultData();
+            }
+            renderTabs();
+            renderEditor(0);
+        }
+
+        // 默认数据
+        function getDefaultData() {
+            return {
+                title: "员工培训实时数据看板",
+                slides: [
+                    {
+                        title: "📈 培训总览",
+                        type: "overview",
+                        kpis: [
+                            { label: "本月培训场次", value: 24, change: "+12%", up: true },
+                            { label: "参训人次", value: 186, change: "+28%", up: true },
+                            { label: "培训覆盖率", value: "87%", change: "+5%", up: true },
+                            { label: "平均满意度", value: "4.6", change: "+0.3", up: true }
+                        ],
+                        chartType: "line",
+                        chartData: {
+                            labels: ["1月", "2月", "3月", "4月", "5月"],
+                            datasets: [{
+                                label: "培训场次",
+                                data: [15, 18, 20, 22, 24],
+                                borderColor: "#2563eb",
+                                backgroundColor: "rgba(37, 99, 235, 0.1)",
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        }
+                    },
+                    {
+                        title: "👥 部门培训分布",
+                        type: "departments",
+                        kpis: [
+                            { label: "技术部", value: 45, change: "12场", up: true },
+                            { label: "销售部", value: 38, change: "10场", up: true },
+                            { label: "运营部", value: 52, change: "15场", up: true },
+                            { label: "人事部", value: 51, change: "8场", up: true }
+                        ],
+                        chartType: "doughnut",
+                        chartData: {
+                            labels: ["技术部", "销售部", "运营部", "人事部", "财务部"],
+                            datasets: [{
+                                data: [45, 38, 52, 51, 28],
+                                backgroundColor: ["#2563eb", "#7c3aed", "#f59e0b", "#10b981", "#ef4444"]
+                            }]
+                        }
+                    },
+                    {
+                        title: "📚 课程类型分析",
+                        type: "courses",
+                        kpis: [
+                            { label: "技能类", value: 42, change: "60%", up: true },
+                            { label: "管理类", value: 18, change: "25%", up: true },
+                            { label: "合规类", value: 8, change: "11%", up: false },
+                            { label: "通识类", value: 12, change: "4%", up: true }
+                        ],
+                        chartType: "bar",
+                        chartData: {
+                            labels: ["技能培训", "管理培训", "合规培训", "通识教育", "安全培训"],
+                            datasets: [{
+                                label: "课程数量",
+                                data: [42, 18, 8, 12, 6],
+                                backgroundColor: ["#2563eb", "#7c3aed", "#f59e0b", "#10b981", "#ef4444"],
+                                borderRadius: 8
+                            }]
+                        }
+                    },
+                    {
+                        title: "✅ 培训完成进度",
+                        type: "progress",
+                        tableData: [
+                            { name: "新员工入职培训", progress: 95, target: 100, status: "即将完成" },
+                            { name: "领导力提升计划", progress: 72, target: 100, status: "进行中" },
+                            { name: "Python技能进阶", progress: 58, target: 80, status: "进行中" },
+                            { name: "销售技巧强化", progress: 100, target: 100, status: "已完成" },
+                            { name: "数据安全意识", progress: 45, target: 60, status: "进行中" },
+                            { name: "跨部门协作", progress: 30, target: 50, status: "刚开始" }
+                        ]
+                    },
+                    {
+                        title: "🏆 培训效果评估",
+                        type: "evaluation",
+                        kpis: [
+                            { label: "知识掌握率", value: "82%", change: "+8%", up: true },
+                            { label: "行为改变率", value: "65%", change: "+12%", up: true },
+                            { label: "业绩提升", value: "23%", change: "+5%", up: true },
+                            { label: "ROI回报", value: "3.2x", change: "+0.4", up: true }
+                        ],
+                        chartType: "radar",
+                        chartData: {
+                            labels: ["知识掌握", "技能应用", "态度转变", "业绩提升", "团队协作", "创新能力"],
+                            datasets: [{
+                                label: "当前季度",
+                                data: [82, 75, 68, 73, 85, 70],
+                                borderColor: "#2563eb",
+                                backgroundColor: "rgba(37, 99, 235, 0.2)",
+                                pointBackgroundColor: "#2563eb"
+                            }, {
+                                label: "上季度",
+                                data: [70, 65, 60, 68, 78, 62],
+                                borderColor: "#94a3b8",
+                                backgroundColor: "rgba(148, 163, 184, 0.2)",
+                                pointBackgroundColor: "#94a3b8"
+                            }]
+                        }
+                    }
+                ]
+            };
+        }
+
+        // 渲染标签页
+        function renderTabs() {
+            const container = document.getElementById('slide-tabs');
+            container.innerHTML = currentData.slides.map((slide, index) => `
+                <button class="tab ${index === 0 ? 'active' : ''}" onclick="switchTab(${index})">
+                    ${slide.title}
+                </button>
+            `).join('');
+        }
+
+        // 切换标签
+        function switchTab(index) {
+            currentSlideIndex = index;
+            document.querySelectorAll('.tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+            renderEditor(index);
+        }
+
+        // 渲染编辑器
+        function renderEditor(index) {
+            const slide = currentData.slides[index];
+            const container = document.getElementById('editor-container');
+
+            let html = `
+                <div class="slide-editor">
+                    <h3>${slide.title} - 数据编辑</h3>
+
+                    <div class="form-group">
+                        <label>幻灯片标题</label>
+                        <input type="text" id="slide-title" value="${slide.title}" onchange="updateSlideTitle(${index}, this.value)">
+                    </div>
+            `;
+
+            // KPI编辑器
+            if (slide.kpis) {
+                html += '<h4 style="margin: 20px 0 12px;">📊 KPI指标</h4>';
+                html += '<div class="kpi-editor">';
+                slide.kpis.forEach((kpi, kpiIndex) => {
+                    html += `
+                        <div class="kpi-edit-card">
+                            <h4>KPI ${kpiIndex + 1}</h4>
+                            <div class="form-group">
+                                <label>标签</label>
+                                <input type="text" value="${kpi.label}" onchange="updateKpi(${index}, ${kpiIndex}, 'label', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>数值</label>
+                                <input type="text" value="${kpi.value}" onchange="updateKpi(${index}, ${kpiIndex}, 'value', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>变化</label>
+                                <input type="text" value="${kpi.change}" onchange="updateKpi(${index}, ${kpiIndex}, 'change', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>趋势</label>
+                                <select onchange="updateKpi(${index}, ${kpiIndex}, 'up', this.value === 'true')">
+                                    <option value="true" ${kpi.up ? 'selected' : ''}>↑ 上升</option>
+                                    <option value="false" ${!kpi.up ? 'selected' : ''}>↓ 下降</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            // 图表数据编辑器
+            if (slide.chartData) {
+                html += '<h4 style="margin: 20px 0 12px;">📈 图表数据</h4>';
+
+                if (slide.chartData.labels) {
+                    html += '<div class="form-group"><label>X轴标签</label>';
+                    html += '<div class="chart-data-editor">';
+                    slide.chartData.labels.forEach((label, i) => {
+                        html += `
+                            <div class="data-row">
+                                <input type="text" value="${label}" onchange="updateChartLabel(${index}, ${i}, this.value)">
+                            </div>
+                        `;
+                    });
+                    html += '</div></div>';
+                }
+
+                if (slide.chartData.datasets) {
+                    slide.chartData.datasets.forEach((dataset, dsIndex) => {
+                        html += `<div class="form-group"><label>数据集 ${dsIndex + 1}: ${dataset.label || '数据'}</label>`;
+                        html += '<div class="chart-data-editor">';
+                        dataset.data.forEach((val, i) => {
+                            html += `
+                                <div class="data-row">
+                                    <input type="number" value="${val}" onchange="updateChartData(${index}, ${dsIndex}, ${i}, this.value)">
+                                </div>
+                            `;
+                        });
+                        html += '</div></div>';
+                    });
+                }
+            }
+
+            // 表格编辑器
+            if (slide.tableData) {
+                html += '<h4 style="margin: 20px 0 12px;">📋 表格数据</h4>';
+                html += '<div class="table-editor">';
+                html += `<table>
+                    <thead>
+                        <tr>
+                            <th>项目名称</th>
+                            <th>当前进度</th>
+                            <th>目标</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+                slide.tableData.forEach((row, rowIndex) => {
+                    html += `
+                        <tr>
+                            <td><input type="text" value="${row.name}" onchange="updateTableCell(${index}, ${rowIndex}, 'name', this.value)"></td>
+                            <td><input type="number" value="${row.progress}" onchange="updateTableCell(${index}, ${rowIndex}, 'progress', this.value)"></td>
+                            <td><input type="number" value="${row.target}" onchange="updateTableCell(${index}, ${rowIndex}, 'target', this.value)"></td>
+                            <td><input type="text" value="${row.status}" onchange="updateTableCell(${index}, ${rowIndex}, 'status', this.value)"></td>
+                            <td><button class="btn btn-danger btn-small" onclick="deleteTableRow(${index}, ${rowIndex})">删除</button></td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                html += `<button class="btn btn-primary" style="margin-top: 12px;" onclick="addTableRow(${index})">+ 添加行</button>`;
+                html += '</div>';
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 更新函数
+        function updateSlideTitle(index, value) {
+            currentData.slides[index].title = value;
+        }
+
+        function updateKpi(slideIndex, kpiIndex, field, value) {
+            currentData.slides[slideIndex].kpis[kpiIndex][field] = value;
+        }
+
+        function updateChartLabel(slideIndex, labelIndex, value) {
+            currentData.slides[slideIndex].chartData.labels[labelIndex] = value;
+        }
+
+        function updateChartData(slideIndex, datasetIndex, dataIndex, value) {
+            currentData.slides[slideIndex].chartData.datasets[datasetIndex].data[dataIndex] = parseFloat(value);
+        }
+
+        function updateTableCell(slideIndex, rowIndex, field, value) {
+            if (field === 'progress' || field === 'target') {
+                value = parseInt(value);
+            }
+            currentData.slides[slideIndex].tableData[rowIndex][field] = value;
+        }
+
+        function deleteTableRow(slideIndex, rowIndex) {
+            currentData.slides[slideIndex].tableData.splice(rowIndex, 1);
+            renderEditor(slideIndex);
+        }
+
+        function addTableRow(slideIndex) {
+            currentData.slides[slideIndex].tableData.push({
+                name: "新项目",
+                progress: 0,
+                target: 100,
+                status: "进行中"
+            });
+            renderEditor(slideIndex);
+        }
+
+        // 保存数据
+        function saveAllData() {
+            localStorage.setItem('dashboard_data', JSON.stringify(currentData));
+            showToast('✅ 数据已保存并推送到所有观众端！', 'success');
+
+            // 刷新预览
+            document.getElementById('preview-frame').src = document.getElementById('preview-frame').src;
+        }
+
+        // 重置数据
+        function resetData() {
+            if (confirm('确定要重置为默认数据吗？当前修改将丢失。')) {
+                currentData = getDefaultData();
+                localStorage.setItem('dashboard_data', JSON.stringify(currentData));
+                renderTabs();
+                renderEditor(0);
+                document.getElementById('preview-frame').src = document.getElementById('preview-frame').src;
+                showToast('🔄 已重置为默认数据', 'success');
+            }
+        }
+
+        // 预览看板
+        function previewDashboard() {
+            window.open('index.html', '_blank');
+        }
+
+        // 显示提示
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast toast-${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 页面加载时检查是否已登录（通过sessionStorage）
+        if (sessionStorage.getItem('admin_logged_in') === 'true') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            loadData();
+        }
+
+        // 登录成功后标记
+        const originalLogin = login;
+        login = function() {
+            const pwd = document.getElementById('password').value;
+            if (pwd === ADMIN_PASSWORD) {
+                sessionStorage.setItem('admin_logged_in', 'true');
+            }
+            originalLogin();
+        };
+    </script>
+</body>
+</html>

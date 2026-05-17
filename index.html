@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>实时数据演示系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 加载画面 -->
+    <div id="loading-screen">
+        <div class="loader">
+            <div class="loader-circle"></div>
+            <p>正在加载实时数据...</p>
+        </div>
+    </div>
+
+    <!-- 顶部状态栏 -->
+    <div id="top-bar">
+        <div class="logo">📊 实时数据看板</div>
+        <div class="status">
+            <span class="live-indicator">● LIVE</span>
+            <span id="last-update">更新于: --</span>
+            <span id="slide-counter">1 / 5</span>
+        </div>
+        <a href="admin.html" class="admin-link" target="_blank">⚙️ 管理后台</a>
+    </div>
+
+    <!-- 幻灯片容器 -->
+    <div id="slideshow-container">
+        <!-- 幻灯片将通过JS动态生成 -->
+    </div>
+
+    <!-- 导航控制 -->
+    <div id="nav-controls">
+        <button id="prev-btn" onclick="prevSlide()">◀</button>
+        <div id="slide-dots"></div>
+        <button id="next-btn" onclick="nextSlide()">▶</button>
+    </div>
+
+    <!-- 自动播放控制 -->
+    <div id="playback-controls">
+        <button id="play-btn" onclick="toggleAutoPlay()">⏸ 暂停</button>
+        <button id="fullscreen-btn" onclick="toggleFullscreen()">⛶ 全屏</button>
+    </div>
+
+    <!-- 数据更新提示 -->
+    <div id="update-toast" class="hidden">
+        <span>🔄 数据已更新</span>
+        <button onclick="location.reload()">立即刷新</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
